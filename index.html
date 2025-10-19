@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Prediksi CNN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .preview-image {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .result-item {
+            animation: slideIn 0.4s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-center">🧠 Aplikasi Prediksi CNN</h1>
+            <p class="text-center mt-2 text-purple-100">Upload gambar untuk mendapatkan prediksi model</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Upload Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">📤 Upload Gambar</h2>
+                
+                <!-- Upload Area -->
+                <div id="uploadArea" class="upload-area border-4 border-dashed border-purple-300 rounded-lg p-8 text-center cursor-pointer bg-purple-50 hover:bg-purple-100">
+                    <svg class="mx-auto h-16 w-16 text-purple-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg text-gray-700 font-medium mb-2">Klik untuk upload atau drag & drop</p>
+                    <p class="text-sm text-gray-500">PNG, JPG, JPEG (Max. 10MB)</p>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*">
+                </div>
+
+                <button id="uploadBtn" class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    Prediksi Gambar
+                </button>
+
+                <!-- Image Preview -->
+                <div id="imagePreview" class="mt-6 hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Preview:</h3>
+                    <div class="relative rounded-lg overflow-hidden shadow-md">
+                        <img id="previewImg" class="preview-image w-full h-64 object-cover" src="" alt="Preview">
+                        <button id="removeBtn" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p><span class="font-semibold">Nama File:</span> <span id="fileName"></span></p>
+                        <p><span class="font-semibold">Ukuran:</span> <span id="fileSize"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">📊 Hasil Prediksi</h2>
+                
+                <div id="noResults" class="text-center py-12">
+                    <svg class="mx-auto h-24 w-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <p class="text-gray-500 text-lg">Belum ada hasil prediksi</p>
+                    <p class="text-gray-400 text-sm mt-2">Upload dan prediksi gambar untuk melihat hasil</p>
+                </div>
+
+                <div id="resultsContainer" class="hidden space-y-4">
+                    <!-- Top Prediction -->
+                    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg p-4 text-white">
+                        <p class="text-sm font-medium opacity-90">Prediksi Teratas</p>
+                        <p class="text-3xl font-bold mt-1" id="topClass">Kucing</p>
+                        <p class="text-xl mt-2">Confidence: <span class="font-semibold" id="topConfidence">95.8%</span></p>
+                    </div>
+
+                    <!-- All Predictions -->
+                    <div class="space-y-3 mt-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Semua Prediksi:</h3>
+                        <div id="predictionsList"></div>
+                    </div>
+
+                    <!-- Prediction Time -->
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-600">
+                            <span class="font-semibold">Waktu Prediksi:</span> <span id="predTime">127ms</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-600 mb-4"></div>
+                    <p class="text-gray-700 font-medium">Memproses prediksi...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-8 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">Informasi</h3>
+                    <p class="text-blue-800">Aplikasi ini menggunakan model Convolutional Neural Network (CNN) untuk mengklasifikasi gambar. Upload gambar untuk mendapatkan prediksi dengan confidence score.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let selectedFile = null;
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeBtn = document.getElementById('removeBtn');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const noResults = document.getElementById('noResults');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loadingState = document.getElementById('loadingState');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-purple-500', 'bg-purple-100');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-purple-500', 'bg-purple-100');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-purple-500', 'bg-purple-100');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // Handle file
+        function handleFile(file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                uploadBtn.disabled = false;
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image
+        removeBtn.addEventListener('click', () => {
+            selectedFile = null;
+            imagePreview.classList.add('hidden');
+            fileInput.value = '';
+            uploadBtn.disabled = true;
+            noResults.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+        });
+
+        // Predict button
+        uploadBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+            
+            // Show loading
+            noResults.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            // Simulate prediction (replace with actual API call)
+            setTimeout(() => {
+                const mockPredictions = [
+                    { class: 'Kucing', confidence: 95.8 },
+                    { class: 'Anjing', confidence: 2.5 },
+                    { class: 'Burung', confidence: 1.2 },
+                    { class: 'Hamster', confidence: 0.3 },
+                    { class: 'Kelinci', confidence: 0.2 }
+                ];
+
+                displayResults(mockPredictions);
+            }, 1500);
+        });
+
+        // Display results
+        function displayResults(predictions) {
+            loadingState.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+
+            // Top prediction
+            document.getElementById('topClass').textContent = predictions[0].class;
+            document.getElementById('topConfidence').textContent = predictions[0].confidence + '%';
+            document.getElementById('predTime').textContent = Math.floor(Math.random() * 200 + 50) + 'ms';
+
+            // All predictions
+            const predictionsList = document.getElementById('predictionsList');
+            predictionsList.innerHTML = '';
+            
+            predictions.forEach((pred, index) => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.style.animationDelay = `${index * 0.1}s`;
+                item.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-medium text-gray-700">${pred.class}</span>
+                        <span class="text-purple-600 font-semibold">${pred.confidence}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-purple-600 h-2.5 rounded-full transition-all duration-1000" style="width: ${pred.confidence}%"></div>
+                    </div>
+                `;
+                predictionsList.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>

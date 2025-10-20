@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hasil Prediksi - Aplikasi CNN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .preview-image {
+        animation: fadeIn 0.5s ease-in;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+      <div class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold text-center">Hasil Prediksi CNN</h1>
+        <p class="text-center mt-2 text-purple-100">
+          Model CIFAR-10 telah menganalisis gambar Anda
+        </p>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Image Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+            Gambar yang Dianalisis
+          </h2>
+
+          <div class="relative rounded-lg overflow-hidden shadow-md">
+            <img
+              src="{{ file_url }}"
+              alt="Uploaded image"
+              class="preview-image w-full h-80 object-cover"
+            />
+          </div>
+
+          <div class="mt-4 text-center">
+            <a
+              href="{{ url_for('main.index') }}"
+              class="inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition duration-300"
+            >
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+              </svg>
+              Analisis Gambar Lain
+            </a>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+            Hasil Prediksi
+          </h2>
+
+          <!-- Top Prediction -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg p-6 text-white mb-6"
+          >
+            <p class="text-sm font-medium opacity-90">Prediksi Teratas</p>
+            <p class="text-4xl font-bold mt-2">{{ prediction.title() }}</p>
+            <p class="text-2xl mt-3">
+              Confidence:
+              <span class="font-semibold">{{ confidence_percent }}%</span>
+            </p>
+          </div>
+
+          <!-- Confidence Bar -->
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700"
+                >Tingkat Keyakinan</span
+              >
+              <span class="text-sm font-semibold text-purple-600"
+                >{{ confidence_percent }}%</span
+              >
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div
+                class="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full transition-all duration-1000"
+                data-width="{{ confidence_percent }}"
+                id="confidenceBar"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Model Information -->
+          <div
+            class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6"
+          >
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-blue-500 mr-2 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <div>
+                <h3 class="text-sm font-semibold text-blue-900 mb-1">
+                  Informasi Model
+                </h3>
+                <p class="text-xs text-blue-800">
+                  Model CNN CIFAR-10 telah dilatih untuk mengenali 10 kelas
+                  objek berbeda dengan akurasi tinggi.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Class Information -->
+          <div class="space-y-3">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">
+              Kelas yang Dikenali:
+            </h3>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'airplane' else '' }}"
+                >Airplane</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'automobile' else '' }}"
+                >Automobile</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'bird' else '' }}"
+                >Bird</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'cat' else '' }}"
+                >Cat</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'deer' else '' }}"
+                >Deer</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'dog' else '' }}"
+                >Dog</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'frog' else '' }}"
+                >Frog</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'horse' else '' }}"
+                >Horse</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'ship' else '' }}"
+                >Ship</span
+              >
+              <span
+                class="bg-gray-100 text-gray-800 px-3 py-2 rounded {{ 'bg-purple-100 text-purple-800 font-semibold' if prediction == 'truck' else '' }}"
+                >Truck</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Info Section -->
+      <div class="mt-8 bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+        <div class="flex items-start">
+          <svg
+            class="h-6 w-6 text-green-500 mr-3 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <div>
+            <h3 class="text-lg font-semibold text-green-900 mb-2">
+              Prediksi Berhasil!
+            </h3>
+            <p class="text-green-800">
+              Model CNN telah berhasil menganalisis gambar Anda. Hasil prediksi
+              menunjukkan bahwa gambar tersebut kemungkinan besar adalah
+              <strong>{{ prediction.title() }}</strong> dengan tingkat keyakinan
+              <strong>{{ confidence_percent }}%</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Set confidence bar width
+      document.addEventListener("DOMContentLoaded", function () {
+        const confidenceBar = document.getElementById("confidenceBar");
+        if (confidenceBar) {
+          const width = confidenceBar.getAttribute("data-width");
+          confidenceBar.style.width = width + "%";
+        }
+      });
+    </script>
+  </body>
+</html>

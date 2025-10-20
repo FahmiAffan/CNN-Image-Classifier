@@ -14,7 +14,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
-from .model import load_model_once, predict_image
+from .model import load_model_once, predict_image, preprocess_image
 
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -56,7 +56,19 @@ def predict():
 
     # Load model (once) and run prediction
     model = load_model_once()
-    prediction, confidence = predict_image(model, save_path)
+
+    # Reset file stream position for preprocessing
+    file.stream.seek(0)
+
+    # Preprocess image using OpenCV
+    image_batch = preprocess_image(file.stream)
+
+    if image_batch is None:
+        flash("Error: Could not process the uploaded image.")
+        return redirect(url_for("main.index"))
+
+    # Get prediction
+    prediction, confidence = model.predict(image_batch)
 
     file_url = url_for("main.uploaded_file", filename=unique_name)
 

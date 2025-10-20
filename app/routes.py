@@ -77,6 +77,7 @@ def predict():
         file_url=file_url,
         prediction=prediction,
         confidence=confidence,
+        confidence_percent=round(confidence * 100, 1),
     )
 
 

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# VSCode/Cursor
+.vscode/
+.cursor/
+
+# Uploads and temp
+uploads/*
+!uploads/.gitkeep
+*.tmp
+*.log
+
+

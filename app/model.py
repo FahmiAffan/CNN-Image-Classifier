@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from typing import Tuple
-from PIL import Image
 import numpy as np
+import cv2
 import tensorflow as tf
 
 
@@ -27,11 +27,10 @@ class CIFAR10Model:
         ]
         # Load the trained model
         self.model = tf.keras.models.load_model(model_path)
+        print(f"[*] Model '{model_path}' berhasil dimuat.")
 
-    def predict(self, image_array: np.ndarray) -> Tuple[str, float]:
-        # Reshape for model input (batch_size, height, width, channels)
-        image_batch = np.expand_dims(image_array, axis=0)
-
+    def predict(self, image_batch: np.ndarray) -> Tuple[str, float]:
+        """Predict the class of a preprocessed image batch."""
         # Get predictions
         predictions = self.model.predict(image_batch, verbose=0)
 
@@ -44,6 +43,7 @@ class CIFAR10Model:
 
 @lru_cache(maxsize=1)
 def load_model_once() -> CIFAR10Model:
+    """Load and cache the CIFAR-10 model once."""
     # Get the path to the model file
     current_dir = os.path.dirname(os.path.dirname(__file__))
     model_path = os.path.join(current_dir, "models", "model_cifar10.h5")
@@ -55,19 +55,68 @@ def load_model_once() -> CIFAR10Model:
     return CIFAR10Model(model_path)
 
 
-def _prepare_image(
-    image_path: str, target_size: tuple[int, int] = (32, 32)
-) -> np.ndarray:
-    """Prepare image for CIFAR-10 model prediction."""
-    image = Image.open(image_path).convert("RGB").resize(target_size)
-    array = np.asarray(image, dtype=np.float32)
-    # Normalize to [0, 1] range as expected by CIFAR-10 models
-    array = array / 255.0
-    return array
+def preprocess_image(file_stream) -> np.ndarray:
+    """
+    Process image from file stream using OpenCV to match CIFAR-10 model requirements.
+
+    Args:
+        file_stream: File stream from uploaded image
+
+    Returns:
+        Preprocessed image batch ready for model prediction
+    """
+    try:
+        # Read image from stream
+        filestr = file_stream.read()
+        npimg = np.frombuffer(filestr, np.uint8)
+
+        # Decode as color image (BGR format from OpenCV)
+        img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
+        # Convert BGR to RGB (OpenCV uses BGR by default)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Resize to model input size (32x32)
+        img_resized = cv2.resize(img, (32, 32), interpolation=cv2.INTER_AREA)
+
+        # Normalize to [0, 1] range (same as training)
+        img_normalized = img_resized / 255.0
+
+        # Reshape for Keras input: (1, height, width, channels)
+        # Result: (1, 32, 32, 3)
+        img_batch = np.reshape(img_normalized, (1, 32, 32, 3))
+
+        return img_batch
+
+    except Exception as e:
+        print(f"[!] Error saat memproses gambar: {e}")
+        return None
 
 
 def predict_image(model: CIFAR10Model, image_path: str) -> Tuple[str, float]:
-    """Predict the class of an image using the CIFAR-10 model."""
-    array = _prepare_image(image_path)
-    label, confidence = model.predict(array)
-    return label, confidence
+    """Predict the class of an image file using the CIFAR-10 model."""
+    try:
+        # Read image file
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Could not read image from {image_path}")
+
+        # Convert BGR to RGB
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Resize to model input size (32x32)
+        img_resized = cv2.resize(img, (32, 32), interpolation=cv2.INTER_AREA)
+
+        # Normalize to [0, 1] range
+        img_normalized = img_resized / 255.0
+
+        # Reshape for Keras input: (1, height, width, channels)
+        img_batch = np.reshape(img_normalized, (1, 32, 32, 3))
+
+        # Get prediction
+        label, confidence = model.predict(img_batch)
+        return label, confidence
+
+    except Exception as e:
+        print(f"[!] Error saat prediksi: {e}")
+        raise

@@ -1,0 +1,60 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #111827;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+h1 {
+  margin-top: 0;
+}
+.upload-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+input[type="file"] {
+  color: #e2e8f0;
+}
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover {
+  background: #1d4ed8;
+}
+.flash {
+  margin-top: 16px;
+  color: #fca5a5;
+}
+.result {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.preview {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+.back {
+  display: inline-block;
+  margin-top: 8px;
+  color: #93c5fd;
+}
